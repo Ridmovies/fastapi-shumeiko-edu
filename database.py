@@ -1,7 +1,8 @@
 """Set up the database connection and session.""" ""
 from collections.abc import AsyncGenerator
-from typing import Any
+from typing import Any, Annotated
 
+from fastapi.params import Depends
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -23,17 +24,17 @@ class Base(DeclarativeBase):
 
     All other models should inherit from this class.
     """
+    __abstract__ = True
 
-    metadata = MetaData(
-        naming_convention={
-            "ix": "ix_%(column_0_label)s",
-            "uq": "uq_%(table_name)s_%(column_0_name)s",
-            "ck": "ck_%(table_name)s_%(constraint_name)s",
-            "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-            "pk": "pk_%(table_name)s",
-        }
-    )
-
+    # metadata = MetaData(
+    # #     naming_convention={
+    # #         "ix": "ix_%(column_0_label)s",
+    # #         "uq": "uq_%(table_name)s_%(column_0_name)s",
+    # #         "ck": "ck_%(table_name)s_%(constraint_name)s",
+    # #         "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    # #         "pk": "pk_%(table_name)s",
+    # #     }
+    # # )
 
 async_engine = create_async_engine(DATABASE_URL, echo=True)
 async_session = async_sessionmaker(async_engine, expire_on_commit=False)
@@ -47,6 +48,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, Any]:
     async with async_session() as session, session.begin():
         yield session
 
+
+session_depends = Annotated[AsyncSession, Depends(get_db)]
 
 async def init_models() -> None:
     """Create tables if they don't already exist.
