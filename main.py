@@ -4,6 +4,7 @@ from fastapi import FastAPI
 import uvicorn
 
 from database import init_models
+from models import Book
 
 
 @asynccontextmanager
@@ -12,14 +13,28 @@ async def lifespan(app: FastAPI):
     yield
 
 
+books = [{
+    "title": "The Hobbit", "author": "J.R.R. Tolkien"
+}]
+
 
 app = FastAPI(lifespan=lifespan)
 
+@app.get("/books")
+def get_book_list() -> list:
+    return books
 
-@app.get("/", summary="main endpoimt")
-def hello():
-    return {"message": "Hello World"}
 
+@app.get("/books/{book_id}")
+def get_book(book_id: int):
+    book = books[book_id]
+    return book
+
+
+@app.post("/books", summary="add book", tags=["books"])
+def add_book(book: Book):
+    books.append(book)
+    return {"message": "Book added"}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", port=8000, reload=True)
