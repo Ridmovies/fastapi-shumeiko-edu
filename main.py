@@ -3,10 +3,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import uvicorn
 
+from database import init_models
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    pass
+    await init_models()
     yield
 
 
@@ -14,7 +16,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-@app.get("/")
+@app.get("/", summary="main endpoimt")
 def hello():
     return {"message": "Hello World"}
 
